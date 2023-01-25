@@ -1,6 +1,6 @@
-use std::{env, fs};
 use std::thread::sleep;
 use std::time::Duration;
+use std::{env, fs};
 
 use csv::ReaderBuilder;
 use gitlab::api::common::{AccessLevel, ProtectedAccessLevel, VisibilityLevel};
@@ -62,7 +62,7 @@ fn main() {
         designation: String::from(args.get(1).unwrap()),
         group_name: String::from(args.get(2).unwrap()),
         template_repo: String::from(args.get(3).unwrap()),
-        token: token.clone()
+        token: token.clone(),
     };
 
     let repo_members = parse_csv_file(args.get(4).unwrap());
@@ -215,7 +215,6 @@ fn parse_csv_file(filename: &String) -> Vec<Vec<String>> {
 }
 
 fn read_token_file(filename: &String) -> String {
-    let token = fs::read_to_string(filename)
-        .expect(&format!{"Unable to read token from file {}", filename});
-    token
+    fs::read_to_string(filename)
+        .unwrap_or_else(|_| panic!("Unable to read token from file {}", filename))
 }
