@@ -91,6 +91,15 @@ fn create_repos(client: Gitlab, repo_members: Vec<Vec<String>>, config: GitLabCo
             format!("{}-{}-g{}", config.group_name, config.designation, (i + 1))
         };
 
+        let gitlab_user_ids = convert_to_user_ids(&client, group_or_student);
+        if gitlab_user_ids.is_empty() {
+            println!(
+                "Unable to create project {}; no gitlab users found",
+                project_name
+            );
+            continue;
+        }
+
         let project = create_project(
             &client,
             import_url.clone(),
@@ -104,10 +113,22 @@ fn create_repos(client: Gitlab, repo_members: Vec<Vec<String>>, config: GitLabCo
 
         configure_branch_protection(&client, &project_name, project.id);
 
-        add_users_to_project(&client, group_or_student, &project_name, project.id);
+        add_users_to_project(&client, gitlab_user_ids, &project_name, project.id);
 
         println! {"Setup of repo {} is complete.", project_name}
     }
+}
+
+fn convert_to_user_ids(client: &Gitlab, group_or_student: &Vec<String>) -> Vec<u64> {
+    let mut id_vector = Vec::new();
+    for student in group_or_student {
+        println!("Looking up student {}...", student);
+        let gl_user_id = retrieve_user_id(client, student);
+        if let Some(id) = gl_user_id {
+            id_vector.push(id)
+        }
+    }
+    id_vector
 }
 
 fn create_project(
@@ -132,26 +153,32 @@ fn create_project(
 
 fn add_users_to_project(
     client: &Gitlab,
-    group_or_student: &Vec<String>,
+    gitlab_user_ids: Vec<u64>,
     project_name: &String,
     project_id: u64,
 ) {
-    for student in group_or_student {
-        println!("Adding student {} to project {}...", student, project_name);
-        let gl_user_builder = UsersBuilder::default().search(student).build().unwrap();
-        let gl_user: Vec<ProjectUser> = gl_user_builder.query(client).unwrap();
-        let gl_user = gl_user.get(0).unwrap();
-
+    println!("Adding user(s) to project {}...", project_name);
+    for student_gitlab_id in gitlab_user_ids {
         let member_builder = AddProjectMemberBuilder::default()
             .project(project_id)
             .access_level(AccessLevel::Developer)
-            .user(gl_user.id)
+            .user(student_gitlab_id)
             .build()
             .unwrap();
 
         // This request also returns a map but I don't really care... Danke, ich hasse es
         member_builder.query(client).unwrap_or(());
     }
+}
+
+fn retrieve_user_id(client: &Gitlab, student: &String) -> Option<u64> {
+    let gl_user_builder = UsersBuilder::default().search(student).build().unwrap();
+    let gl_user: Vec<ProjectUser> = gl_user_builder.query(client).unwrap();
+    return if gl_user.is_empty() {
+        None
+    } else {
+        Option::from(gl_user.get(0).unwrap().id)
+    };
 }
 
 fn configure_branch_protection(client: &Gitlab, project_name: &String, project_id: u64) {
