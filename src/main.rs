@@ -14,8 +14,7 @@ use gitlab::Gitlab;
 use serde::Deserialize;
 
 const UW_GITLAB_URL: &str = "git.uwaterloo.ca";
-// One day this will be "main" but for now...
-const DEFAULT_BRANCH_NAME: &str = "master";
+const DEFAULT_BRANCH_NAME: &str = "main";
 
 #[derive(Debug, Deserialize)]
 struct Project {

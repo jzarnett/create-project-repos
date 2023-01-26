@@ -49,10 +49,12 @@ A plain text file containing your gitlab user token. Whoever the token belongs t
 
 ## TODOs
 - Right now I have a `sleep` call in between creating the repo and trying to set the branch protection rules. That's annoying, but I wasn't easily able to solve it in the first version.
-- This isn't parallelized, though in practice I'd like to try doing 2-3 repos at once. Helps when there's 400+ students. 
-- At some point the default branch should change from `master` to `main` and it would be nice if the program could handle that automatically
+- This isn't parallelized, though in practice I'd like to try doing 2-3 repos at once. Helps when there's 400+ students.
 - Groups are always assigned sequential numbers based on their order in the file. In the future, maybe support a prefix so the group number could be something else, like "201.1" if the groups are subdivided in some way (e.g., by lab section).
 - Letting you give params in any order might be good.
+- Some repo might use `master` instead of `main` as the name of the default branch. It would be cool to handle that automatically.
+- When I get out of developer prison for not writing tests, I expect I will have to write tests as restitution.
+- Right now we'll fail the whole process if a student doesn't have their gitlab account set up. We should catch the panic and just write down their name and go on. Ideally before making their repo.
 
 ## Changelog
 
