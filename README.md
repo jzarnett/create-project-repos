@@ -92,6 +92,10 @@ creating here. No newline or anything at the end of the file.
 
 ## Changelog
 
+### 1.1.1
+
+Tests and minor version bump of gitlab
+
 ### 1.1.0
 
 I fixed two things that were in the TODOs; one minor and one major.
