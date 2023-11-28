@@ -174,7 +174,7 @@ fn add_users_to_project(
 }
 
 fn retrieve_user_id(client: &Gitlab, student: &String) -> Option<u64> {
-    let gl_user_builder = UsersBuilder::default().search(student).build().unwrap();
+    let gl_user_builder = UsersBuilder::default().username(student).build().unwrap();
     let gl_user: Vec<ProjectUser> = gl_user_builder.query(client).unwrap();
     return if gl_user.is_empty() {
         None
