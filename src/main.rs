@@ -234,7 +234,9 @@ fn parse_csv_file(filename: &String) -> Vec<Vec<String>> {
         let line = line.unwrap();
         let mut inner = Vec::new();
         for user in line.split(',') {
-            inner.push(String::from(user.trim()))
+            if !user.is_empty() {
+                inner.push(String::from(user.trim()));
+            }
         }
         result.push(inner);
     }
@@ -400,6 +402,29 @@ mod tests {
         inner.push(String::from("username"));
         inner.push(String::from("u2sernam"));
         inner.push(String::from("u3sernam"));
+        expected.push(inner);
+
+        let mut inner = Vec::new();
+        inner.push(String::from("u4sernam"));
+        expected.push(inner);
+
+        let parsed = parse_csv_file(&test_filename);
+
+        assert_eq!(parsed, expected);
+    }
+
+    #[test]
+    fn can_parse_group_w_empty_line_csv() {
+        let test_filename = String::from("test/resources/group_empty_line.csv");
+        let mut expected: Vec<Vec<String>> = Vec::new();
+
+        let mut inner = Vec::new();
+        inner.push(String::from("username"));
+        inner.push(String::from("u2sernam"));
+        inner.push(String::from("u3sernam"));
+        expected.push(inner);
+
+        let inner = Vec::new();
         expected.push(inner);
 
         let mut inner = Vec::new();
