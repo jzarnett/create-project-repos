@@ -104,7 +104,13 @@ fn create_repos(client: Gitlab, repo_members: Vec<Vec<String>>, config: GitLabCo
             project_name.clone(),
             project_group_id,
         );
-        println!("Created project {project_name} with id {project_id}!");
+        match project_id {
+            0 => {
+                println!("Failed to create project {project_name}!");
+                continue;
+            }
+            _ => println!("Created project {project_name} with id {project_id}!"),
+        }
         // Sleep seems to be needed here otherwise the branch protection call gets a 404
         // I presume it's because gitlab is setting up stuff in the background but argh
         sleep(Duration::new(10, 0));
@@ -146,8 +152,15 @@ fn create_project(
         .build()
         .unwrap();
 
-    let project: Project = project_builder.query(client).unwrap();
-    project.id
+    let result: Result<Project, gitlab::api::ApiError<gitlab::RestError>> =
+        project_builder.query(client);
+    match result {
+        Ok(project) => project.id,
+        Err(err) => {
+            println!("{}", err);
+            0
+        }
+    }
 }
 
 fn add_users_to_project(
