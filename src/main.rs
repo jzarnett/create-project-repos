@@ -104,7 +104,13 @@ fn create_repos(client: Gitlab, repo_members: Vec<Vec<String>>, config: GitLabCo
             project_name.clone(),
             project_group_id,
         );
-        println!("Created project {project_name} with id {project_id}!");
+        match project_id {
+            0 => {
+                println!("Failed to create project {project_name}!");
+                continue;
+            }
+            _ => println!("Created project {project_name} with id {project_id}!"),
+        }
         // Sleep seems to be needed here otherwise the branch protection call gets a 404
         // I presume it's because gitlab is setting up stuff in the background but argh
         sleep(Duration::new(10, 0));
@@ -146,8 +152,15 @@ fn create_project(
         .build()
         .unwrap();
 
-    let project: Project = project_builder.query(client).unwrap();
-    project.id
+    let result: Result<Project, gitlab::api::ApiError<gitlab::RestError>> =
+        project_builder.query(client);
+    match result {
+        Ok(project) => project.id,
+        Err(err) => {
+            println!("{}", err);
+            0
+        }
+    }
 }
 
 fn add_users_to_project(
@@ -174,7 +187,7 @@ fn add_users_to_project(
 }
 
 fn retrieve_user_id(client: &Gitlab, student: &String) -> Option<u64> {
-    let gl_user_builder = UsersBuilder::default().search(student).build().unwrap();
+    let gl_user_builder = UsersBuilder::default().username(student).build().unwrap();
     let gl_user: Vec<ProjectUser> = gl_user_builder.query(client).unwrap();
     return if gl_user.is_empty() {
         None
@@ -234,7 +247,9 @@ fn parse_csv_file(filename: &String) -> Vec<Vec<String>> {
         let line = line.unwrap();
         let mut inner = Vec::new();
         for user in line.split(',') {
-            inner.push(String::from(user.trim()))
+            if !user.is_empty() {
+                inner.push(String::from(user.trim()));
+            }
         }
         result.push(inner);
     }
@@ -400,6 +415,29 @@ mod tests {
         inner.push(String::from("username"));
         inner.push(String::from("u2sernam"));
         inner.push(String::from("u3sernam"));
+        expected.push(inner);
+
+        let mut inner = Vec::new();
+        inner.push(String::from("u4sernam"));
+        expected.push(inner);
+
+        let parsed = parse_csv_file(&test_filename);
+
+        assert_eq!(parsed, expected);
+    }
+
+    #[test]
+    fn can_parse_group_w_empty_line_csv() {
+        let test_filename = String::from("test/resources/group_empty_line.csv");
+        let mut expected: Vec<Vec<String>> = Vec::new();
+
+        let mut inner = Vec::new();
+        inner.push(String::from("username"));
+        inner.push(String::from("u2sernam"));
+        inner.push(String::from("u3sernam"));
+        expected.push(inner);
+
+        let inner = Vec::new();
         expected.push(inner);
 
         let mut inner = Vec::new();
