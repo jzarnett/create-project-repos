@@ -4,7 +4,7 @@ use std::thread::sleep;
 use std::time::Duration;
 use std::{env, fs};
 
-use gitlab::api::common::{AccessLevel, ProtectedAccessLevel, VisibilityLevel};
+use gitlab::api::common::{AccessLevel, ProtectedAccessLevel, ProtectedAccessLevelWithAccess, VisibilityLevel};
 use gitlab::api::groups::GroupBuilder;
 use gitlab::api::projects::members::AddProjectMemberBuilder;
 use gitlab::api::projects::protected_branches::ProtectedAccess;
@@ -214,7 +214,7 @@ fn configure_branch_protection(client: &Gitlab, project_name: &String, project_i
         .allow_force_push(false)
         .allowed_to_merge(ProtectedAccess::Level(ProtectedAccessLevel::Developer))
         .allowed_to_push(ProtectedAccess::Level(ProtectedAccessLevel::Developer))
-        .allowed_to_unprotect(ProtectedAccess::Level(ProtectedAccessLevel::Admin))
+        .allowed_to_unprotect(ProtectedAccess::Level(ProtectedAccessLevelWithAccess::Admin))
         .build()
         .unwrap();
 
